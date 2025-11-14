@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TAMIL KART</title>
+  <style>
+    :root{
+      --bg:#f5f7fb; --card:#ffffff; --muted:#6b7280; --accent:#0ea5a4; --shadow: 0 6px 18px rgba(9,10,25,0.06);
+      --max-w:1100px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#f7fbfc, var(--bg));color:#0f172a;}
+    .wrap{max-width:var(--max-w);margin:28px auto;padding:20px}
+
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#7dd3fc);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    h1{font-size:18px;margin:0}
+    .controls{display:flex;gap:12px;align-items:center}
+
+    .search{padding:10px 12px;border-radius:10px;border:1px solid #e6eef5;background:#fff;min-width:220px}
+    .cart-btn{position:relative;padding:10px 12px;border-radius:10px;border:0;background:var(--card);box-shadow:var(--shadow);cursor:pointer}
+    .cart-count{position:absolute;right:-6px;top:-6px;background:#ef4444;color:white;border-radius:50%;padding:3px 7px;font-size:12px}
+
+    main{display:grid;grid-template-columns:1fr 320px;gap:18px}
+
+    /* left: products */
+    .toolbar{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+    .filters{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{background:var(--card);padding:8px 10px;border-radius:999px;border:1px solid #eef6fb;cursor:pointer}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+    .img{height:140px;border-radius:8px;background:#eef7f6;display:flex;align-items:center;justify-content:center;font-size:48px;color:var(--accent)}
+    .title{font-weight:600}
+    .price{font-weight:700}
+    .add{margin-top:auto;padding:8px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent),#06b6d4);color:white;cursor:pointer}
+
+    /* sidebar cart */
+    aside{background:var(--card);border-radius:12px;padding:12px;height:fit-content;box-shadow:var(--shadow)}
+    .cart-item{display:flex;gap:8px;align-items:center;border-bottom:1px dashed #eef3f6;padding:10px 0}
+    .qty{display:flex;gap:6px;align-items:center}
+    .qty button{padding:4px 8px;border-radius:8px;border:1px solid #e6eef5;background:transparent;cursor:pointer}
+    .checkout{display:block;text-align:center;padding:10px;border-radius:10px;border:0;background:#111827;color:white;margin-top:12px;cursor:pointer}
+
+    /* modal */
+    .modal{position:fixed;inset:0;background:rgba(3,7,18,0.45);display:none;align-items:center;justify-content:center}
+    .modal .box{width:420px;background:var(--card);padding:18px;border-radius:12px}
+
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+
+    @media (max-width:900px){main{grid-template-columns:1fr}aside{order:2;margin-top:12px}}
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="loginScreen" style="position:fixed;inset:0;background:#f0f4f8;display:flex;align-items:center;justify-content:center;z-index:9999;">
+    <div style="background:white;padding:20px 28px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.1);width:320px;text-align:center;">
+      <h2 style="margin-top:0;margin-bottom:10px;">Login</h2>
+      <input id="loginUser" placeholder="Username" style="width:100%;padding:10px;margin-bottom:10px;border-radius:8px;border:1px solid #d6e0ea;" />
+      <input id="loginPass" type="password" placeholder="Password" style="width:100%;padding:10px;margin-bottom:15px;border-radius:8px;border:1px solid #d6e0ea;" />
+      <button id="loginBtn" style="width:100%;padding:10px;border-radius:10px;background:#0ea5a4;color:white;border:0;cursor:pointer;">Login</button>
+      <div id="loginError" style="color:#ef4444;margin-top:10px;display:none;">Invalid credentials</div>
+    </div>
+  </div>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">E</div>
+        <div>
+          <h1>TAMIL KART</h1>
+          <div style="font-size:13px;color:var(--muted)"> e‑commerce </div>
+        </div>
+      </div>
+      <div class="controls">
+        <input id="search" class="search" placeholder="Search products..." />
+        <button id="viewCart" class="cart-btn" aria-label="Open cart">Cart <span id="cartCount" class="cart-count">0</span></button>
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <div class="toolbar">
+          <div class="filters">
+            <button class="chip" data-cat="all">All</button>
+            <button class="chip" data-cat="clothing">Clothing</button>
+            <button class="chip" data-cat="gadgets">Gadgets</button>
+            <button class="chip" data-cat="home">Home</button>
+          </div>
+          <div style="margin-left:auto;color:var(--muted);">Sort:
+            <select id="sort">
+              <option value="default">Popular</option>
+              <option value="price-asc">Price: low → high</option>
+              <option value="price-desc">Price: high → low</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="productGrid" class="grid" aria-live="polite"></div>
+      </section>
+
+      <aside aria-label="Shopping cart">
+        <h3>Cart</h3>
+        <div id="cartItems"></div>
+        <div style="display:flex;justify-content:space-between;padding-top:8px;font-weight:700">
+          <div>Total:</div>
+          <div id="cartTotal">₹0.00</div>
+        </div>
+        <button id="checkout" class="checkout">Checkout</button>
+      </aside>
+    </main>
+
+    <footer>COPYRIGHTS RESERVED <code></code> @2025</footer>
+  </div>
+
+  <div id="modal" class="modal" role="dialog" aria-hidden="true">
+    <div class="box">
+      <h3 id="modalTitle">Checkout</h3>
+      <p id="modalBody">This is a  checkout. Cart will be cleared on confirm.</p>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button id="modalClose" class="chip">Cancel</button>
+        <button id="modalConfirm" class="add">Confirm & Pay</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sample product data
+    const products = [
+      {id:1,title:'Cozy Hoodie',price:1599,category:'clothing',emoji:'🧥'},
+      {id:2,title:'Wireless Earbuds',price:3499,category:'gadgets',emoji:'🎧'},
+      {id:3,title:'Ceramic Mug',price:499,category:'home',emoji:'☕'},
+      {id:4,title:'Smart Watch',price:8999,category:'gadgets',emoji:'⌚'},
+      {id:5,title:'Graphic Tee',price:799,category:'clothing',emoji:'👕'},
+      {id:6,title:'Desk Lamp',price:1299,category:'home',emoji:'💡'},
+    ];
+
+    // State: cart stored as {productId: qty}
+    let cart = JSON.parse(localStorage.getItem('mini_cart') || '{}');
+
+    // Helpers
+    const format = n => '₹' + n.toFixed(2);
+    const saveCart = ()=>{ localStorage.setItem('mini_cart', JSON.stringify(cart)); renderCart(); }
+
+    // Render functions
+    function renderProducts(list=products){
+      const grid = document.getElementById('productGrid'); grid.innerHTML='';
+      list.forEach(p=>{
+        const el = document.createElement('article'); el.className='card';
+        el.innerHTML = `
+          <div class="img" aria-hidden="true">${p.emoji}</div>
+          <div class="title">${p.title}</div>
+          <div style="color:var(--muted);font-size:13px">${p.category}</div>
+          <div class="price">${format(p.price/100)}</div>
+          <button class="add" data-id="${p.id}">Add to cart</button>
+        `;
+        grid.appendChild(el);
+      });
+    }
+
+    function renderCart(){
+      const container = document.getElementById('cartItems'); container.innerHTML='';
+      const ids = Object.keys(cart).map(Number);
+      let total = 0;
+      if(ids.length===0){ container.innerHTML='<div style="color:var(--muted);padding:8px">Cart is empty</div>'; }
+      ids.forEach(id=>{
+        const p = products.find(x=>x.id===id);
+        const qty = cart[id];
+        total += (p.price/100)*qty;
+        const row = document.createElement('div'); row.className='cart-item';
+        row.innerHTML = `
+          <div style="width:46px;height:46px;border-radius:8px;background:#f1f9f8;display:flex;align-items:center;justify-content:center">${p.emoji}</div>
+          <div style="flex:1">
+            <div style="font-weight:600">${p.title}</div>
+            <div style="font-size:13px;color:var(--muted)">${format(p.price/100)}</div>
+          </div>
+          <div class="qty">
+            <button data-action="dec" data-id="${id}">-</button>
+            <div style="min-width:22px;text-align:center">${qty}</div>
+            <button data-action="inc" data-id="${id}">+</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+      document.getElementById('cartTotal').textContent = format(total);
+      document.getElementById('cartCount').textContent = ids.reduce((s,i)=>s+cart[i],0) || 0;
+    }
+
+    // Add to cart
+    document.addEventListener('click', e=>{
+      const addBtn = e.target.closest('.add[data-id]');
+      if(addBtn){
+        const id = Number(addBtn.dataset.id);
+        cart[id] = (cart[id]||0)+1; saveCart(); return;
+      }
+      // cart qty controls
+      const qbtn = e.target.closest('[data-action]');
+      if(qbtn){
+        const id = Number(qbtn.dataset.id);
+        if(qbtn.dataset.action === 'inc'){ cart[id] = (cart[id]||0)+1; }
+        else { cart[id] = (cart[id]||0)-1; if(cart[id]<=0) delete cart[id]; }
+        saveCart(); return;
+      }
+    });
+
+    // Filters / search / sort
+    document.getElementById('search').addEventListener('input', e=>applyFilters());
+    document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click', e=>{ document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active')); e.target.classList.add('active'); applyFilters(); }))
+    document.getElementById('sort').addEventListener('change', applyFilters);
+
+    function applyFilters(){
+      const q = document.getElementById('search').value.trim().toLowerCase();
+      const active = document.querySelector('.chip.active')?.dataset.cat || 'all';
+      const sort = document.getElementById('sort').value;
+      let list = products.filter(p=>{
+        if(active!=='all' && p.category !== active) return false;
+        if(q && !(p.title.toLowerCase().includes(q) || p.category.includes(q))) return false;
+        return true;
+      });
+      if(sort==='price-asc') list.sort((a,b)=>a.price-b.price);
+      if(sort==='price-desc') list.sort((a,b)=>b.price-a.price);
+      renderProducts(list);
+    }
+
+    // Checkout modal
+    const modal = document.getElementById('modal');
+    document.getElementById('checkout').addEventListener('click', ()=>{
+      modal.style.display='flex'; modal.setAttribute('aria-hidden','false');
+    });
+    document.getElementById('modalClose').addEventListener('click', ()=>{ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); });
+    document.getElementById('modalConfirm').addEventListener('click', ()=>{ cart={}; saveCart(); modal.style.display='none'; alert('Thank you! This is a demo — no real payment processed.'); });
+
+    // View cart button focuses cart (mobile)
+    document.getElementById('viewCart').addEventListener('click', ()=>{ window.scrollTo({top:document.querySelector('aside').offsetTop,behavior:'smooth'}); });
+
+    // Login system
+    const loginScreen = document.getElementById('loginScreen');
+    document.getElementById('loginBtn').addEventListener('click',()=>{
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value.trim();
+      if(u==='user' && p==='1234'){
+        loginScreen.style.display='none';
+      } else {
+        loginScreen.style.display='none';
+      }
+    });
+
+    // init
+    renderProducts(); renderCart();
+
+  </script>
+</body>
+</html>
